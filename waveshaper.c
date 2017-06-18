@@ -31,6 +31,7 @@
 #define NAME "Waveshaper (Fish)"
 #define URI "https://taylor.fish/plugins/waveshaper"
 #define CLIP_TIMEOUT 2  // seconds
+#define MONITOR_MIN_DB -40
 
 static float f_zero = 0.0f;
 static float f_half = 0.5f;
@@ -297,6 +298,9 @@ static LV2_Handle instantiate(
     ws->xs[NUM_USER_POINTS + 1] = &f_zero;  // Origin
     ws->ys[NUM_USER_POINTS + 1] = &f_zero;  // Origin
     ws->xs[NUM_USER_POINTS + 2] = &f_one;  // End point
+
+    // This causes monitors to be reset during the first call to run().
+    ws->old_monitor_levels = true;
     return (LV2_Handle)ws;
 }
 
@@ -499,7 +503,7 @@ static void run(LV2_Handle instance, uint32_t n_samples_total) {
                     continue;
                 }
 
-                in_val *= db_multiplier(*ws->input_gain);
+                in_val *= db_to_amplitude(*ws->input_gain);
                 int in_sign = in_val < 0 ? -1 : 1;
 
                 if (monitor && fabs(in_val) > max_in_val) {
@@ -538,7 +542,7 @@ static void run(LV2_Handle instance, uint32_t n_samples_total) {
 
             for (uint32_t pos = 0; pos < n_samples; pos++) {
                 float out_val = output[pos];
-                out_val *= db_multiplier(*ws->output_gain);
+                out_val *= db_to_amplitude(*ws->output_gain);
                 if (monitor) {
                     if (out_val > max_out_val || -out_val > max_out_val) {
                         max_out_val = fabs(out_val);
@@ -557,8 +561,8 @@ static void run(LV2_Handle instance, uint32_t n_samples_total) {
         if (!monitor) {
             if (ws->input_clip != NULL) *ws->input_clip = 0;
             if (ws->output_0db != NULL) *ws->output_0db = 0;
-            if (ws->input_level != NULL) *ws->input_level = 0;
-            if (ws->output_level != NULL) *ws->output_level = 0;
+            if (ws->input_level != NULL) *ws->input_level = MONITOR_MIN_DB;
+            if (ws->output_level != NULL) *ws->output_level = MONITOR_MIN_DB;
             ws->reset_input_clip_after = 0;
             ws->reset_output_0db_after = 0;
         }
@@ -581,19 +585,19 @@ static void run(LV2_Handle instance, uint32_t n_samples_total) {
         }
 
         if (max_in_val > 1) {
-            if (ws->input_level != NULL) *ws->input_level = 1;
+            if (ws->input_level != NULL) *ws->input_level = 0;
             if (ws->input_clip != NULL) *ws->input_clip = 1;
             ws->reset_input_clip_after = CLIP_TIMEOUT * ws->sample_rate;
-        } else {
-            if (ws->input_level != NULL) *ws->input_level = max_in_val;
+        } else if (ws->input_level != NULL) {
+            *ws->input_level = amplitude_to_db(max_in_val, MONITOR_MIN_DB);
         }
 
         if (max_out_val >= 1) {
-            if (ws->output_level != NULL) *ws->output_level = 1;
+            if (ws->output_level != NULL) *ws->output_level = 0;
             if (ws->output_0db != NULL) *ws->output_0db = 1;
             ws->reset_output_0db_after = CLIP_TIMEOUT * ws->sample_rate;
-        } else {
-            if (ws->output_level != NULL) *ws->output_level = max_out_val;
+        } else if (ws->output_level != NULL) {
+            *ws->output_level = amplitude_to_db(max_out_val, MONITOR_MIN_DB);
         }
     }
 }

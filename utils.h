@@ -53,8 +53,14 @@ static inline int double_cmp(double first, double second) {
     return 0;
 }
 
-static inline float db_multiplier(float db) {
+static inline float db_to_amplitude(float db) {
     return powf(10.0f, db * 0.05f);
+}
+
+static inline float amplitude_to_db(float amplitude, float min) {
+    if (amplitude <= 0) return min;
+    float db = 20 * log10f(amplitude);
+    return db <= min ? min : db;
 }
 
 void sort_points(Point *points, size_t count);

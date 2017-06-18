@@ -287,12 +287,12 @@ a lv2:OutputPort ,
   lv2:ControlPort ;
 lv2:index {index} ;
 lv2:symbol "input_level" ;
-lv2:name "Input level" ;
+lv2:name "Input level (dB)" ;
 lv2:portProperty pprops:hasStrictBounds ;
 lv2:portProperty lv2:connectionOptional ;
-lv2:default 0 ;
-lv2:minimum 0 ;
-lv2:maximum 1 ;
+units:unit units:db ;
+lv2:minimum -40 ;
+lv2:maximum 0 ;
 """),
 
     ("INPUT_CLIP", """
@@ -303,7 +303,6 @@ lv2:symbol "input_clip" ;
 lv2:name "Input clip" ;
 lv2:portProperty pprops:hasStrictBounds ;
 lv2:portProperty lv2:connectionOptional ;
-lv2:default 0 ;
 lv2:minimum 0 ;
 lv2:maximum 1 ;
 """),
@@ -313,12 +312,12 @@ a lv2:OutputPort ,
   lv2:ControlPort ;
 lv2:index {index} ;
 lv2:symbol "output_level" ;
-lv2:name "Output level" ;
+lv2:name "Output level (dB)" ;
 lv2:portProperty pprops:hasStrictBounds ;
 lv2:portProperty lv2:connectionOptional ;
-lv2:default 0 ;
-lv2:minimum 0 ;
-lv2:maximum 1 ;
+units:unit units:db ;
+lv2:minimum -40 ;
+lv2:maximum 0 ;
 """),
 
     ("OUTPUT_0DB", """
@@ -329,7 +328,6 @@ lv2:symbol "output_0db" ;
 lv2:name "Output 0dB" ;
 lv2:portProperty pprops:hasStrictBounds ;
 lv2:portProperty lv2:connectionOptional ;
-lv2:default 0 ;
 lv2:minimum 0 ;
 lv2:maximum 1 ;
 """),
