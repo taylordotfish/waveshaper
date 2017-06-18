@@ -94,6 +94,8 @@ bool needs_update(Waveshaper *ws);
 void update_splines(Waveshaper *ws);
 void update_caches(Waveshaper *ws);
 double get_curve_value(Waveshaper *ws, double x);
+void update_lp_filters(Waveshaper *ws, uint_fast8_t multiplier);
+void reset_lp_filters(Waveshaper *ws);
 
 LV2_SYMBOL_EXPORT
 const LV2_Descriptor *lv2_descriptor(uint32_t index);
