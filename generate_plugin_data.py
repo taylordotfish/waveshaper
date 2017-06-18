@@ -55,7 +55,8 @@ TTL_HEAD = """
 @prefix pprops: <http://lv2plug.in/ns/ext/port-props#> .
 
 <https://taylor.fish/plugins/waveshaper>
-    a lv2:Plugin ;
+    a lv2:Plugin ,
+      lv2:WaveshaperPlugin ;
     doap:name "Fish Waveshaper" ;
     doap:license <https://www.gnu.org/licenses/gpl-3.0.txt> ;
     doap:developer [
