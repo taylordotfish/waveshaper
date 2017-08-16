@@ -31,9 +31,9 @@ shape of the curve between that point and the next point to the right. The
 * **Tension:** A parabolic curve affected by the “tension” option. It is
   always increasing or decreasing; it does not change direction.
 * **Tangents:** A curve with the slope of the leftmost part determined by
-  “tangent 1” and the rightmost part determined by “tangent 2”.
+  “tan.&nbsp;1” and the rightmost part determined by “tan.&nbsp;2”.
 
-The "Origin" tension, tangent, and curve settings affect the curve between the
+The “Origin” tension, tangent, and curve settings affect the curve between the
 point in the bottom left corner (representing an input and output amplitude of
 0) and the next point to the right.
 
