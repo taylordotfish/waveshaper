@@ -28,7 +28,6 @@
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-#define NAME "Waveshaper (Fish)"
 #define URI "https://taylor.fish/plugins/waveshaper"
 #define CLIP_TIMEOUT 2  // seconds
 #define MONITOR_MIN_DB -40
