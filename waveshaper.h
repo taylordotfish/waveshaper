@@ -29,8 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define URI "https://taylor.fish/plugins/waveshaper"
-
 // Constants
 enum {
     NUM_POINTS = NUM_USER_POINTS + 3,
