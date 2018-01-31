@@ -81,19 +81,8 @@ typedef struct {
 
     uint32_t reset_input_clip_after;
     uint32_t reset_output_0db_after;
+    uint32_t samples_since_update_check;
 } Waveshaper;
-
-int gnuplot_printf(Waveshaper *ws, const char *format, ...);
-void start_gnuplot(Waveshaper *ws);
-void update_gnuplot(Waveshaper *ws);
-void stop_gnuplot(Waveshaper *ws);
-void close_gnuplot(Waveshaper *ws);
-bool needs_update(Waveshaper *ws);
-void update_splines(Waveshaper *ws);
-void update_caches(Waveshaper *ws);
-double get_curve_value(Waveshaper *ws, double x);
-void update_lp_filters(Waveshaper *ws, uint_fast8_t multiplier);
-void reset_lp_filters(Waveshaper *ws);
 
 LV2_SYMBOL_EXPORT
 const LV2_Descriptor *lv2_descriptor(uint32_t index);

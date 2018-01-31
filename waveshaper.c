@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 taylor.fish <contact@taylor.fish>
+ * Copyright (C) 2017-2018 taylor.fish <contact@taylor.fish>
  *
  * This file is part of Fish Waveshaper.
  *
@@ -31,12 +31,16 @@
 #define URI "https://taylor.fish/plugins/waveshaper"
 #define CLIP_TIMEOUT 2  // seconds
 #define MONITOR_MIN_DB -40
+#define UPDATE_CHECK_DIVISOR 10
+
+static inline void close_gnuplot(Waveshaper *ws);
+static void update_gnuplot(Waveshaper *ws);
 
 static float f_zero = 0.0f;
 static float f_half = 0.5f;
 static float f_one = 1.0f;
 
-int gnuplot_printf(Waveshaper *ws, const char *format, ...) {
+static int gnuplot_printf(Waveshaper *ws, const char *format, ...) {
     va_list args;
     va_start(args, format);
     int status = vfprintf(ws->gnuplot, format, args);
@@ -45,7 +49,7 @@ int gnuplot_printf(Waveshaper *ws, const char *format, ...) {
     return status;
 }
 
-void start_gnuplot(Waveshaper *ws) {
+static void start_gnuplot(Waveshaper *ws) {
     if (ws->gnuplot != NULL) return;
     FILE *gnuplot = popen("LD_LIBRARY_PATH= gnuplot", "w");
     setbuf(gnuplot, NULL);
@@ -84,7 +88,7 @@ void start_gnuplot(Waveshaper *ws) {
     update_gnuplot(ws);
 }
 
-void update_gnuplot(Waveshaper *ws) {
+static void update_gnuplot(Waveshaper *ws) {
     if (ws->gnuplot == NULL) return;
     if (gnuplot_printf(ws, "plot [0:1] [0:1] sample ") < 0) return;
     for (size_t i = 0; i < ws->num_splines; i++) {
@@ -136,18 +140,18 @@ void update_gnuplot(Waveshaper *ws) {
     if (gnuplot_printf(ws, "e\n") < 0) return;
 }
 
-void stop_gnuplot(Waveshaper *ws) {
+static inline void stop_gnuplot(Waveshaper *ws) {
     if (ws->gnuplot == NULL) return;
     if (gnuplot_printf(ws, "\nquit\n") < 0) return;
     close_gnuplot(ws);
 }
 
-void close_gnuplot(Waveshaper *ws) {
+static inline void close_gnuplot(Waveshaper *ws) {
     pclose(ws->gnuplot);
     ws->gnuplot = NULL;
 }
 
-bool needs_update(Waveshaper *ws) {
+static inline bool needs_update(Waveshaper *ws) {
     if ((*ws->asymmetric > 0) != ws->old_asymmetric) {
         return true;
     }
@@ -190,7 +194,7 @@ bool needs_update(Waveshaper *ws) {
     return false;
 }
 
-void update_splines(Waveshaper *ws) {
+static inline void update_splines(Waveshaper *ws) {
     bool asymmetric = *ws->asymmetric > 0;
     if (asymmetric) {
         ws->xs[NUM_USER_POINTS + 1] = &f_half;
@@ -225,7 +229,7 @@ void update_splines(Waveshaper *ws) {
     ws->num_splines = num_points - 1;
 }
 
-void update_caches(Waveshaper *ws) {
+static inline void update_caches(Waveshaper *ws) {
     ws->old_asymmetric = *ws->asymmetric > 0;
 
     for (size_t i = 0; i < NUM_POINTS; i++) {
@@ -241,7 +245,7 @@ void update_caches(Waveshaper *ws) {
     }
 }
 
-double get_curve_value(Waveshaper *ws, double x) {
+static inline double get_curve_value(Waveshaper *ws, double x) {
     for (size_t i = 0; i < ws->num_splines; i++) {
         double x1 = ws->splines[i].x1;
         double x2 = ws->splines[i].x2;
@@ -257,7 +261,7 @@ double get_curve_value(Waveshaper *ws, double x) {
     return 0;
 }
 
-void update_lp_filters(Waveshaper *ws, uint_fast8_t multiplier) {
+static inline void update_lp_filters(Waveshaper *ws, uint_fast8_t multiplier) {
     float fc = 1.0f / (2 * multiplier);
     for (size_t i = 0; i < 2; i++) {
         update_lowpass_coefficients(&ws->lp1[i], fc);
@@ -265,14 +269,14 @@ void update_lp_filters(Waveshaper *ws, uint_fast8_t multiplier) {
     }
 }
 
-void reset_lp_filters(Waveshaper *ws) {
+static inline void reset_lp_filters(Waveshaper *ws) {
     for (size_t i = 0; i < 2; i++) {
         reset_lowpass(&ws->lp1[i]);
         reset_lowpass(&ws->lp2[i]);
     }
 }
 
-void free_lp_filters(Waveshaper *ws) {
+static inline void free_lp_filters(Waveshaper *ws) {
     for (size_t i = 0; i < 2; i++) {
         free_lowpass(&ws->lp1[i]);
         free_lowpass(&ws->lp2[i]);
@@ -408,6 +412,7 @@ static void activate(LV2_Handle instance) {
     ws->old_display_plot = false;
     ws->reset_input_clip_after = 0;
     ws->reset_output_0db_after = 0;
+    ws->samples_since_update_check = ws->sample_rate / UPDATE_CHECK_DIVISOR;
 
     memset(ws->splines, 0, sizeof(ws->splines));
     ws->splines[0].x1 = 0;
@@ -444,10 +449,16 @@ static void run(LV2_Handle instance, uint32_t n_samples_total) {
         }
     }
 
-    if (needs_update(ws)) {
-        update_splines(ws);
-        update_caches(ws);
-        update_gnuplot(ws);
+    ws->samples_since_update_check += n_samples_total;
+    uint32_t samples_passed = ws->samples_since_update_check;
+    uint32_t update_check_thresh = ws->sample_rate / UPDATE_CHECK_DIVISOR;
+    if (samples_passed > update_check_thresh && needs_update(ws)) {
+        if (needs_update(ws)) {
+            update_splines(ws);
+            update_caches(ws);
+            update_gnuplot(ws);
+        }
+        ws->samples_since_update_check = 0;
     }
 
     if (display_plot != ws->old_display_plot) {

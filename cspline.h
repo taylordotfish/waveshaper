@@ -38,13 +38,62 @@ typedef struct {
     SplineType type;
 } SplineParams;
 
-double cspline(double x, double x1, double x2, double y1, double y2,
-               double tangent1, double tangent2);
+static inline double cspline_get_t(double x, double x1, double x2) {
+    return (x - x1) / (x2 - x1);
+}
 
-double cspline_quad(double x, double x1, double x2, double y1, double y2,
-                    double tension);
+static inline double cspline(
+        double x, double x1, double x2, double y1, double y2,
+        double tangent1, double tangent2) {
+    double slope = (y2 - y1) / (x2 - x1);
+    double abs_tangent1 = slope * (tangent1 + 1);
+    double abs_tangent2 = slope * (tangent2 + 1);
+    double t = cspline_get_t(x, x1, x2);
+    double t_2 = t * t;
+    double t_3 = t_2 * t;
+    return (
+        (2 * t_3 - 3 * t_2 + 1) * y1 +
+        (t_3 - 2 * t_2 + t) * (x2 - x1) * abs_tangent1 +
+        (-2 * t_3 + 3 * t_2) * y2 +
+        (t_3 - t_2) * (x2 - x1) * abs_tangent2
+    );
+}
 
-double linear_spline(double x, double x1, double x2, double y1, double y2);
-double spline_from_params(double x, SplineParams *params);
+static inline double cspline_quad(
+        double x, double x1, double x2, double y1, double y2,
+        double tension) {
+    double slope = (y2 - y1) / (x2 - x1);
+    double abs_tension = slope * tension;
+    double t = cspline_get_t(x, x1, x2);
+    double t_2 = t * t;
+    return (
+        (x2 - x1) * (-abs_tension * t_2 + abs_tension * t) -
+        y1 * t + y2 * t + y1
+    );
+}
+
+static inline double linear_spline(
+        double x, double x1, double x2, double y1, double y2) {
+    double slope = (y2 - y1) / (x2 - x1);
+    return slope * (x - x1) + y1;
+}
+
+static inline double spline_from_params(double x, SplineParams *params) {
+    double x1 = params->x1;
+    double x2 = params->x2;
+    double y1 = params->y1;
+    double y2 = params->y2;
+
+    switch (params->type) {
+        case SPLINE_CUBIC:
+            return cspline(
+                x, x1, x2, y1, y2, params->tangent1, params->tangent2
+            );
+        case SPLINE_QUADRATIC:
+            return cspline_quad(x, x1, x2, y1, y2, params->tension);
+        default:
+            return linear_spline(x, x1, x2, y1, y2);
+    }
+}
 
 #endif

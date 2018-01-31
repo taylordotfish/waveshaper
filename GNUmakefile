@@ -19,7 +19,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Werror -pedantic -std=c99 -fpic -Ofast -MMD
 LDFLAGS = -shared -Wl,--no-undefined,--no-allow-shlib-undefined
 LDLIBS = -lm
-OBJECTS = waveshaper.o cspline.o utils.o iir.o
+OBJECTS = waveshaper.o utils.o iir.o
 LIBRARY = waveshaper.so
 
 all: $(LIBRARY)
