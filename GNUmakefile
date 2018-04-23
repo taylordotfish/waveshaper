@@ -1,4 +1,4 @@
-# Copyright (C) 2017 taylor.fish <contact@taylor.fish>
+# Copyright (C) 2017-2018 taylor.fish <contact@taylor.fish>
 #
 # This file is part of Fish Waveshaper.
 #
@@ -22,6 +22,7 @@ LDLIBS = -lm
 OBJECTS = waveshaper.o utils.o iir.o
 LIBRARY = waveshaper.so
 
+.PHONY: all
 all: $(LIBRARY)
 
 $(LIBRARY): $(OBJECTS)
@@ -34,4 +35,4 @@ $(LIBRARY): $(OBJECTS)
 
 .PHONY: clean
 clean:
-	rm -f *.o *.d *.so
+	rm -f $(OBJECTS) $(OBJECTS:.o=.d) $(LIBRARY)
