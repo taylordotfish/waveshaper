@@ -1,7 +1,12 @@
 Fish Waveshaper
 ===============
 
-Fish Waveshaper is a powerful LV2 waveshaper plugin.
+Fish Waveshaper is an LV2 waveshaper plugin.
+
+*Update: You should probably just use [Wolf Shaper] instead, but I’ll keep this
+up for posterity.*
+
+[Wolf Shaper]: https://github.com/pdesaulniers/wolf-shaper
 
 
 Usage
